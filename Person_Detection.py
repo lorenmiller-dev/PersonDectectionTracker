@@ -16,6 +16,8 @@ CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus"
            "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
 
 
+# Test Text
+
 def main():
     # Open video file
     cap = cv2.VideoCapture(0)
@@ -72,19 +74,13 @@ def main():
             index = int(detection[1])
 
             # Check if detection = person class with sufficient confidence
-            if confidence > 0.7 and CLASSES[index] == "person":
+            if confidence > 0.5 and CLASSES[index] == "person":
                 # Extract box coordinates for person detection
                 person_box = detection[3:7] * np.array([W, H, W, H])
                 (startX, startY, endX, endY) = person_box.astype("int")
 
                 # Draws rectangle around the person in the image
                 cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 255, 255), 2)
-            if confidence > 0.7 and CLASSES[index] == "cat":
-                person_box = detection[3:7] * np.array([W, H, W, H])
-                (startX, startY, endX, endY) = person_box.astype("int")
-
-                # Draws rectangle around the person in the image
-                cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 0, 255), 2)
 
         # Display text and FPS
         fps_text = "FPS: {:.1f}".format(fps)
