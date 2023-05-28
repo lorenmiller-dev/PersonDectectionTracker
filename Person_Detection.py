@@ -16,8 +16,6 @@ CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus"
            "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
 
 
-# Test Text
-
 def main():
     # Open video file
     cap = cv2.VideoCapture(0)
