@@ -1,15 +1,45 @@
+import os
+import time
+import traceback
+
 import cv2
 import imutils
 import datetime
 import numpy as np
+from twilio.rest import Client
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Twilio credentials
+account_sid = os.getenv('TWILIO_SID')
+auth_token = os.getenv('TWILIO_AUTH_TOKEN')
+twilio_phone_number = os.getenv('TWILIO_PHONE_NUMBER')
+my_phone_number = os.getenv('MY_PHONE_NUMBER')
+
+
+# Create Twilio client
+client = Client(account_sid, auth_token)
 
 # Constants
 FPS_DISPLAY_POS = (30, 30)  # Position to display FPS text
 NORMALIZATION_SCALE = 0.007843  # Normalization scale for blobFromImage
 MEAN_SUBTRACTION_VALUE = 127.5  # Mean subtraction value for blobFromImage
+TEXT_COOLDOWN = 5  # Cooldown duration in seconds
+last_detection_time = time.time()
 
 # Color
 BOUNDING_BOX_COLOR = (0, 255, 255)  # BGR Format
+
+
+def send_text_message():
+    message = client.messages.create(
+        body='Movement Detected',
+        from_=twilio_phone_number,
+        to=my_phone_number
+    )
+    print("Text message sent")
 
 
 # Calculate frames per second (FPS) based on the total frames processed and the start time
@@ -73,7 +103,7 @@ def draw_boxes(frame, detections, W, H):
 
 # Paths to the MobileNetSSD model files
 protopath = "MobileNetSSD_deploy.prototxt"
-modelpath = "MobileNetSSD_deploy_1.caffemodel"
+modelpath = "MobileNetSSD_deploy.caffemodel"
 
 # Load the pre-trained MobileNetSSD model
 detector = cv2.dnn.readNetFromCaffe(prototxt=protopath, caffeModel=modelpath)
@@ -85,54 +115,68 @@ CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus"
 
 
 def main():
-    # Open video file
-    cap = cv2.VideoCapture(0)
+    global last_detection_time
+    try:
+        # Open video file
+        cap = cv2.VideoCapture(1)
 
-    fps_start = datetime.datetime.now()  # start time for calculating FPS
-    total_frames = 0
+        fps_start = datetime.datetime.now()  # start time for calculating FPS
+        total_frames = 0
 
-    while True:
-        # If camera is not open, break
-        if not cap.isOpened():
-            print("Camera disconnected")
-            break
+        while True:
+            # If camera is not open, break
+            if not cap.isOpened():
+                print("Camera disconnected")
+                break
 
-        # Read frame from video
-        ret, frame = cap.read()  # reads next frame from video
+            # Read frame from video
+            ret, frame = cap.read()  # reads next frame from video
 
-        # If frame retrieval fails, break
-        if not ret:
-            print("Failed to retrieve frame")
-            break
+            # If frame retrieval fails, break
+            if not ret:
+                print("Failed to retrieve frame")
+                break
 
-        # Calculate FPS
-        total_frames += 1
-        fps = calculate_fps(total_frames, fps_start)
+            # Calculate FPS
+            total_frames += 1
+            fps = calculate_fps(total_frames, fps_start)
 
-        # Resize frame
-        width = 700
-        frame = imutils.resize(frame, width)
+            # Resize frame
+            width = 700
+            frame = imutils.resize(frame, width)
 
-        # Person Detection
-        person_detections = detect_person(frame, detector)
+            # Person Detection
+            person_detections = detect_person(frame, detector)
 
-        # Draw bounding boxes around people
-        frame = draw_boxes(frame, person_detections, frame.shape[1], frame.shape[0])
+            # Draw bounding boxes around people
+            frame = draw_boxes(frame, person_detections, frame.shape[1], frame.shape[0])
 
-        # Display text and FPS
-        fps_text = "FPS: {:.1f}".format(fps)
-        cv2.putText(frame, fps_text, FPS_DISPLAY_POS, cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-        cv2.imshow('Application', frame)  # Display frames
+            # Display text and FPS
+            fps_text = "FPS: {:.1f}".format(fps)
+            cv2.putText(frame, fps_text, FPS_DISPLAY_POS, cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+            cv2.imshow('Application', frame)  # Display frames
 
-        key = cv2.waitKey(1)  # waits for key press
-        if key == ord('q'):  # press q to exit loop
-            break
+            # Check if any person is detected and cooldown period has elapsed
+            if len(person_detections) > 0 and (time.time() - last_detection_time) >= TEXT_COOLDOWN:
+                # Send text message
+                send_text_message()
 
-    # Release video capture and close windows
-    cap.release()
-    cv2.destroyAllWindows()
+                last_detection_time = time.time()
+
+            key = cv2.waitKey(1)  # waits for key press
+            if key == ord('q'):  # press q to exit loop
+                break
+
+    except Exception as e:
+        print("An error occurred:")
+        print(str(e))
+        traceback.print_exc()
+
+    finally:
+        # Release video capture and close windows
+        cap.release()
+        cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
     main()
-
