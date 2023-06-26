@@ -26,40 +26,6 @@ You also need to set up a Twilio account and obtain your account SID, authentica
 
    ```shell
    git clone https://github.com/your-username/motion-detection.git
-
-   
-Certainly! Here's an example README file for your repository based on the provided project:
-
-markdown
-Copy code
-# Motion Detection Application
-
-This repository contains a motion detection application that uses computer vision techniques to detect and track movement in a video stream. When movement is detected, the application sends a text message notification using Twilio.
-
-## Features
-
-- Real-time motion detection using the MobileNetSSD model
-- Bounding box visualization around detected persons
-- Text message notification for movement events
-- Frames per second (FPS) display on the video stream
-
-## Prerequisites
-
-Before running the application, make sure you have the following installed:
-
-- Python 3
-- OpenCV
-- imutils
-- Twilio Python library
-
-You also need to set up a Twilio account and obtain your account SID, authentication token, and phone numbers for sending and receiving text messages. Update the corresponding variables in the code with your Twilio credentials.
-
-## Usage
-
-1. Clone the repository:
-
-   ```shell
-   git clone https://github.com/your-username/motion-detection.git
    
 2. Navigate to the project directory:
 
