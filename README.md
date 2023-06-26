@@ -25,7 +25,7 @@ You also need to set up a Twilio account and obtain your account SID, authentica
 1. Clone the repository:
 
    ```shell
-   git clone https://github.com/your-username/motion-detection.git
+   git clone https://github.com/lorenmiller.dev/PersonDetectionTracker.git
    
 2. Navigate to the project directory:
 
